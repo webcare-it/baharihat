@@ -103,7 +103,11 @@
                                                             @endif
                                                         </td>
                                                         <td>
-                                                            <img src="{{ asset('/product/images/'.$order->orderDetails[0]->product?->image) }}" alt="product image" height="50" width="50" />
+                                                            @if($order->orderDetails->isNotEmpty())
+                                                                <img src="{{ asset('/product/images/'.$order->orderDetails[0]->product?->image) }}" alt="product image" height="50" width="50" />
+                                                            @else
+                                                                <img src="{{ asset('/product/images/placeholder.jpg') }}" alt="no product image" height="50" width="50" />
+                                                            @endif
                                                         </td>
                                                         <td>
                                                             <span class="badge bg-info" style="font-size: 12px; color: black">{{env('APP_NAME')}}</span><br/>
