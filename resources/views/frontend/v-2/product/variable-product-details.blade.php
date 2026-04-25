@@ -83,25 +83,37 @@
 
                         <form action="{{url('/add/to/cart/variable-details/page/'.$details->id)}}" id="addToCartForm" method="POST">
                             @csrf
-                            <div class="my-4 d-flex align-items-center justify-content-center md-justify-content-start gap-3" id="buttonGroup">
-                                @foreach ($details->productImages as $image)
-                                    @if ($image->color != null)
-                                        <button id="button" type="button" class="px-4 py-2 bg-light text-dark rounded" onclick="currentSlide({{$loop->index+1}}),ProductColor('{{$image->color}}')">{{$image->color}}</button>
-                                    @endif
-                                @endforeach
-                                <input type="hidden" name="inputcolor" id="inputcolor" value="">
-                            </div>
-
-                            <div id="size" class="hidden sizeButtonGroups">
-                                <div class="d-flex align-items-center justify-content-center lg-justify-content-start gap-2 lg-gap-4">
+                            <!-- Color Selection -->
+                            @if($details->productImages->where('color', '!=', null)->count() > 0)
+                            <div class="my-4">
+                                <div class="product-details-select-items-wrap" id="buttonGroup">
                                     @foreach ($details->productImages as $image)
-                                       @if ($image->size != null)
-                                       <button type="button" class="px-4 py-2 bg-light text-dark rounded" onclick="productSize({{ $image->price }}, '{{ $image->size }}')">{{$image->size}}</button>
-                                       @endif
+                                        @if ($image->color != null)
+                                            <div class="product-details-select-item-outer">
+                                                <input type="radio" name="inputcolor" id="color-{{$loop->index}}" value="{{$image->color}}" class="category-item-radio" onclick="currentSlide({{$loop->index+1}}),ProductColor('{{$image->color}}')">
+                                                <label for="color-{{$loop->index}}" class="category-item-label">{{$image->color}}</label>
+                                            </div>
+                                        @endif
                                     @endforeach
-                                    <input type="hidden" name="inputsize" id="inputsize" value="">
                                 </div>
                             </div>
+                            @endif
+
+                            <!-- Size Selection -->
+                            @if($details->productImages->where('size', '!=', null)->count() > 0)
+                            <div id="size" class="sizeButtonGroups">
+                                <div class="product-details-select-items-wrap">
+                                    @foreach ($details->productImages as $image)
+                                       @if ($image->size != null)
+                                       <div class="product-details-select-item-outer">
+                                           <input type="radio" name="inputsize" id="size-{{$loop->index}}" value="{{$image->size}}" class="category-item-radio" onclick="productSize({{ $image->price }}, '{{ $image->size }}')">
+                                           <label for="size-{{$loop->index}}" style="font-size: 13px;" class="category-item-label">{{$image->size}}</label>
+                                       </div>
+                                       @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
 
                             <div class="text-xl text-dark lg-text-3xl my-4 md-d-flex align-items-center gap-2 font-medium">
                                 <p class="text-dark text-center md-text-start">
@@ -121,26 +133,26 @@
                             </div>
 
                             <div class="my-4 d-flex align-items-center justify-content-center md-justify-content-start gap-3 mx-auto text-xl font-md">
-                                {{-- <button type="button" class="quantity-btn btn btn-dark border border-dark px-2 py-1 rounded-circle">-</button>
-                                <div class="quantity-display border-dark border px-4 py-1 rounded text-dark">1</div>
-                                <input type="hidden" name="inputQty" id="inputQty" value="1">
-                                <button type="button" class="quantity-btn btn btn-dark border border-dark px-2 py-1 rounded-circle">+</button> --}}
                                 <input type="hidden" name="inputQty" id="inputQty" value="1">
                             </div>
 
                             <div class="my-4 gap-3 font-medium">
                                 <input type="hidden" name="button_action" id="buttonAction" value="">
-                                <div class="my-2">
-                                    <button onclick="setButtonAction('buyNow')" class="font-medium order-btn btn py-2 w-100 lg-w-60">
-                                        <i class="fa-solid fa-truck"></i> Order Now
-                                    </button>
+                                <div class="purchase-info-outer">
+                                    <div>
+                                        <button type="submit" name="action" value="buyNow" onclick="setButtonAction('buyNow')" class="cart-btn-inner">
+                                            <i class="fas fa-truck"></i>
+                                            Order Now
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="">
-                                <button class="font-medium order-btn btn py-2 w-100 lg-w-60">
-                                    <i class="fa-solid fa-phone"></i> For Call : {{$setting->phone}}
-                                </button>
+                                <a href="tel:{{$setting->phone}}" class="product-details-hot-line">
+                                    <i class="fas fa-phone-alt"></i>
+                                    For Call : {{$setting->phone}}
+                                </a>
                             </div>
                         </form>
                     </div>
@@ -149,21 +161,25 @@
                 <!--Product details Tabs -->
                 <div class="my-5 bg-white border border-gray-200 rounded-xl">
                     <!-- Tab button -->
-                    <ul class="nav nav-pills flex-column flex-sm-row gap-3 px-4 mt-3 justify-content-start" id="tabContainer">
-                        <li class="nav-item my-1">
-                            <button class=" order-btn text-white rounded-pill" data-bs-toggle="pill" data-bs-target="#descriptionTab">Description</button>
+                    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pills-description-tab" data-bs-toggle="pill" data-bs-target="#pills-description" type="button" role="tab" aria-controls="pills-description" aria-selected="true">
+                                Description
+                            </button>
                         </li>
-                        {{-- <li class="nav-item my-1">
-                            <button class="nav-link bg-gray-200 rounded-pill" data-bs-toggle="pill" data-bs-target="#policyTab">Product Policy</button>
+                        {{-- <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-policy-tab" data-bs-toggle="pill" data-bs-target="#pills-policy" type="button" role="tab" aria-controls="pills-policy" aria-selected="true">
+                                Product Policy
+                            </button>
                         </li> --}}
                     </ul>
                     <!--Description Tab content -->
-                    <div class="tab-content px-2 lg-px-5">
-                        <div class="tab-pane fade show active my-4" id="descriptionTab">
+                    <div class="tab-content" id="pills-tabContent">
+                        <div class="tab-pane fade show active my-4" id="pills-description" role="tabpanel" aria-labelledby="pills-description-tab">
                             {!!$details->long_description!!}
                         </div>
                         {{-- <!-- policy tab -->
-                        <div class="tab-pane fade my-4" id="policyTab">
+                        <div class="tab-pane fade my-4" id="pills-policy" role="tabpanel" aria-labelledby="pills-policy-tab">
                             {!!$details->policy!!}
                         </div> --}}
                     </div>

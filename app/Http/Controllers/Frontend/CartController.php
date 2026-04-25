@@ -44,7 +44,9 @@ class CartController extends Controller
             //if cart already have this product
             if ($oldCartProduct){
                 $oldCartProduct->qty = $oldCartProduct->qty+1;
-                $oldCartProduct->price += $product->discount_price ?? $product->regular_price;
+                // Recalculate total price: new_qty × unit_price
+                $unitPrice = $product->discount_price ?? $product->regular_price;
+                $oldCartProduct->price = $oldCartProduct->qty * $unitPrice;
                 $oldCartProduct->save();
             }
             else{
@@ -82,7 +84,9 @@ class CartController extends Controller
             //if cart already have this product
             if ($oldCartProduct){
                 $oldCartProduct->qty = $oldCartProduct->qty+1;
-                $oldCartProduct->price += $product->discount_price ?? $product->regular_price;
+                // Recalculate total price: new_qty × unit_price
+                $unitPrice = $product->discount_price ?? $product->regular_price;
+                $oldCartProduct->price = $oldCartProduct->qty * $unitPrice;
                 $oldCartProduct->save();
             }
             else{
@@ -144,7 +148,9 @@ class CartController extends Controller
         if($action === 'addToCart'){
             if ($oldCartProduct){
                 $oldCartProduct->qty = $oldCartProduct->qty + $request->qty;
-                $oldCartProduct->price += $request->inputPrice;
+                // Calculate total price: existing items + new items
+                $unitPrice = $request->price; // Use the price sent from form (already unit price)
+                $oldCartProduct->price = ($oldCartProduct->qty * $unitPrice);
                 $oldCartProduct->save();
             }
             else
@@ -156,7 +162,7 @@ class CartController extends Controller
                     $cartProduct->qty = $request->qty;
                     $cartProduct->color = $request->color;
                     $cartProduct->size = $request->size;
-                    $cartProduct->price = $request->price;
+                    $cartProduct->price = $request->price * $request->qty; // Total price = unit price × qty
                     $cartProduct->save();
                 }else{
                     $cartProduct = new Cart();
@@ -165,7 +171,7 @@ class CartController extends Controller
                     $cartProduct->qty = $request->qty;
                     $cartProduct->color = $request->color;
                     $cartProduct->size = $request->size;
-                    $cartProduct->price = $request->price;
+                    $cartProduct->price = $request->price * $request->qty; // Total price = unit price × qty
                     $cartProduct->save();
                 }
             }
@@ -175,7 +181,9 @@ class CartController extends Controller
         else{
             if ($oldCartProduct){
                 $oldCartProduct->qty = $oldCartProduct->qty + $request->qty;
-                $oldCartProduct->price += $request->inputPrice;
+                // Calculate total price: existing items + new items
+                $unitPrice = $request->price;
+                $oldCartProduct->price = ($oldCartProduct->qty * $unitPrice);
                 $oldCartProduct->save();
             }
             else
@@ -187,7 +195,7 @@ class CartController extends Controller
                     $cartProduct->qty = $request->qty;
                     $cartProduct->color = $request->color;
                     $cartProduct->size = $request->size;
-                    $cartProduct->price = $request->price;
+                    $cartProduct->price = $request->price * $request->qty; // Total price = unit price × qty
                     $cartProduct->save();
                 }else{
                     $cartProduct = new Cart();
@@ -196,7 +204,7 @@ class CartController extends Controller
                     $cartProduct->qty = $request->qty;
                     $cartProduct->color = $request->color;
                     $cartProduct->size = $request->size;
-                    $cartProduct->price = $request->price;
+                    $cartProduct->price = $request->price * $request->qty; // Total price = unit price × qty
                     $cartProduct->save();
                 }
             }
@@ -212,7 +220,9 @@ class CartController extends Controller
         if($action === 'addToCart'){
             if ($oldCartProduct){
                 $oldCartProduct->qty = $oldCartProduct->qty + $request->inputQty;
-                $oldCartProduct->price += $request->inputPrice;
+                // Recalculate total price based on new quantity
+                $unitPrice = $request->inputPrice;
+                $oldCartProduct->price = ($oldCartProduct->qty * $unitPrice);
                 $oldCartProduct->save();
             }
             else
@@ -224,7 +234,7 @@ class CartController extends Controller
                     $cartProduct->qty = $request->inputQty;
                     $cartProduct->color = $request->inputcolor;
                     $cartProduct->size = $request->inputsize;
-                    $cartProduct->price = $request->inputPrice;
+                    $cartProduct->price = $request->inputPrice * $request->inputQty; // Total price = unit price × qty
                     $cartProduct->save();
                 }else{
                     $cartProduct = new Cart();
@@ -233,7 +243,7 @@ class CartController extends Controller
                     $cartProduct->qty = $request->inputQty;
                     $cartProduct->color = $request->inputcolor;
                     $cartProduct->size = $request->inputsize;
-                    $cartProduct->price = $request->inputPrice;
+                    $cartProduct->price = $request->inputPrice * $request->inputQty; // Total price = unit price × qty
                     $cartProduct->save();
                 }
             }
@@ -244,7 +254,9 @@ class CartController extends Controller
         else{
             if ($oldCartProduct){
                 $oldCartProduct->qty = $oldCartProduct->qty + $request->inputQty;
-                $oldCartProduct->price += $request->inputPrice;
+                // Recalculate total price based on new quantity
+                $unitPrice = $request->inputPrice;
+                $oldCartProduct->price = ($oldCartProduct->qty * $unitPrice);
                 $oldCartProduct->save();
             }
             else
@@ -256,7 +268,7 @@ class CartController extends Controller
                     $cartProduct->qty = $request->inputQty;
                     $cartProduct->color = $request->inputcolor;
                     $cartProduct->size = $request->inputsize;
-                    $cartProduct->price = $request->inputPrice;
+                    $cartProduct->price = $request->inputPrice * $request->inputQty; // Total price = unit price × qty
                     $cartProduct->save();
                 }else{
                     $cartProduct = new Cart();
@@ -265,7 +277,7 @@ class CartController extends Controller
                     $cartProduct->qty = $request->inputQty;
                     $cartProduct->color = $request->inputcolor;
                     $cartProduct->size = $request->inputsize;
-                    $cartProduct->price = $request->inputPrice;
+                    $cartProduct->price = $request->inputPrice * $request->inputQty; // Total price = unit price × qty
                     $cartProduct->save();
                 }
             }
@@ -334,15 +346,21 @@ class CartController extends Controller
             return response()->json(['error' => 'Cart item not found.'], 404);
         }
 
+        // Store the current price and qty before making changes
+        $currentQty = $cart->qty;
+        $currentTotalPrice = $cart->price;
+        
+        // Calculate unit price from current state (before quantity change)
+        $unitPrice = $currentQty > 0 ? $currentTotalPrice / $currentQty : 0;
+
         if ($request->type == 'increment') {
             $cart->qty++;
         } elseif ($request->type == 'decrement' && $cart->qty > 1) {
             $cart->qty--;
         }
 
-        // Calculate price based on the original price per item for variable products
-        $originalPricePerItem = $cart->qty > 1 ? $cart->price / ($cart->qty + ($request->type == 'increment' ? 1 : -1)) : $cart->price;
-        $cart->price = $originalPricePerItem * $cart->qty;
+        // Calculate new total price: unit_price × new_qty
+        $cart->price = $unitPrice * $cart->qty;
         $cart->save();
 
         return response()->json([
@@ -360,10 +378,13 @@ class CartController extends Controller
          }
          
          if ($cart->qty > 1) {
+             // Calculate unit price BEFORE decrementing
+             $unitPrice = $cart->price / $cart->qty;
+             
              $cart->qty--;
-             // Calculate price based on the original price per item for variable products
-             $originalPricePerItem = $cart->price / ($cart->qty + 1); // +1 because we decremented
-             $cart->price = $originalPricePerItem * $cart->qty;
+             
+             // Calculate new total: unit_price × new_qty
+             $cart->price = $unitPrice * $cart->qty;
              $cart->save();
          }
          
