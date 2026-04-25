@@ -94,22 +94,6 @@
                                             {{-- <input type="text" name="c_address" class="form-control" value="{{ $order->address ?? 'No address' }}"> --}}
                                         </div>
                                     </div>
-                                    <div class="col-md-12">
-                                        <div class="input-group-wrap">
-                                            <label for="courier">
-                                                Courier
-                                            </label>
-                                            <select name="courier" id="courier" class="form-control">
-                                                <option selected disabled>-- Select Courier --</option>
-                                                <option value="Steadfast" @if ($order->courier_name === 'Steadfast') selected @endif>
-                                                    Steadfast</option>
-                                                <option value="Pathao" @if ($order->courier_name === 'Pathao') selected @endif>
-                                                    Pathao</option>
-                                                <option value="Others" @if ($order->courier_name === 'Others') selected @endif>
-                                                    Others</option>
-                                            </select>
-                                        </div>
-                                    </div>
                                     <div class="col-md-12" id="textareaWrapper" style="display: none;">
                                         <div class="input-group-wrap">
                                             <label for="otherCourierDetails">
